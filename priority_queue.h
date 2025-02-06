@@ -78,6 +78,23 @@ extern "C" {
 *
 *
 *****************************************************************/
+void create_priority_queue(void** priority_queue, uint64_t size_of_datatype, uint8_t type_of_priority_queue);   // uint64_t elements_to_allocate
+
+void priority_queue_push(void* id_of_queue, void* data_to_push);
+
+void priority_queue_pop(void* id_of_queue);
+
+void* priority_queue_top(void* id_of_queue);
+
+uint8_t check_priority_queue_is_empty(void* id_of_queue);
+
+uint64_t check_priority_queue_size(void* id_of_queue);
+
+void free_priority_queue(void* priority_queue);
+
+
+
+// void change_priority();
 
 
 
