@@ -66,7 +66,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-
+ 
 /*****************************************************/
 
 
@@ -102,6 +102,7 @@ struct priority_queue
         uint64_t datatype_size;                         // num_of_bytes
         uint64_t k_aux;                                 // auxiliary 4 bytes for reallocation      
         void *priority_queue_data;
+        int8_t (*compare_func)(void* val1, void* val2);
 };
 
 
@@ -117,7 +118,6 @@ struct priority_queue
 
 /* 7 function declarations */
 /*****************************************************/
-
 
 
 
@@ -139,7 +139,7 @@ struct priority_queue
 *
 *
 *****************************************************************/
-void create_priority_queue(void** id_of_priority_queue, uint64_t size_of_datatype, uint64_t elements_to_allocate, uint8_t type_of_priority_queue)   // uint64_t elements_to_allocate
+void create_priority_queue(void** id_of_priority_queue, uint64_t size_of_datatype, uint64_t elements_to_allocate, uint8_t type_of_priority_queue, int8_t (*compare_func)(void* val1, void* val2))   // uint64_t elements_to_allocate
 {
         /* LOCAL VARIABLES:
         *  Variable        Type    Description
@@ -169,7 +169,8 @@ void create_priority_queue(void** id_of_priority_queue, uint64_t size_of_datatyp
         ((struct priority_queue*)(*id_of_priority_queue))->priority_queue_size = 0;
         ((struct priority_queue*)(*id_of_priority_queue))->datatype_size = size_of_datatype;
         ((struct priority_queue*)(*id_of_priority_queue))->k_aux = 1;
-        
+        ((struct priority_queue*)(*id_of_priority_queue))->compare_func = compare_func;
+
         // Allocate space in the priority_queue for the array of values
         ((struct priority_queue*)(*id_of_priority_queue))->priority_queue_data = (void*) malloc(((struct priority_queue*)(*id_of_priority_queue))->priority_queue_size_allocated*((struct priority_queue*)(*id_of_priority_queue))->datatype_size);     
         if(NULL == ((struct priority_queue*)(*id_of_priority_queue))->priority_queue_data)
@@ -185,23 +186,40 @@ void create_priority_queue(void** id_of_priority_queue, uint64_t size_of_datatyp
 
 /******************************************************************
 *
-* FUNCTION NAME: check_queue_front
+* FUNCTION NAME: priority_queue_top      
 *
-* PURPOSE: Returns the memory position of the element that is currently on the front of the queue
+* PURPOSE:Returns the memory position of the element that is currently on the top of the priority queue
 *
 * ARGUMENTS:
 *
-* ARGUMENT 	TYPE	        I/O	DESCRIPTION
-* id_of_queue   void*	        I	pointer to the memory position of the queue to check
-* 
+* ARGUMENT              TYPE	        I/O	DESCRIPTION
+* --------              ----            ---     ------------
+* id_of_priority_queue  void*	        I	pointer to the memory position of the priority queue to check
 *
-* RETURNS: void* (pointer to the memory position of the element at the front of the queue)
+*
+* RETURNS: 
 *
 *
 *
 *****************************************************************/
 void* priority_queue_top(void* id_of_priority_queue)
 {
+        /* LOCAL VARIABLES:
+        *  Variable        Type    Description
+        *  --------        ----    -----------
+        *  None
+        */
+        if(NULL == id_of_priority_queue)
+        {
+                fprintf(stderr, "Priority queue pointer location is null\n");
+                return NULL;
+        }
+               
+
+        if(check_queue_is_empty(id_of_priority_queue))                       
+                return NULL;
+
+        return (void *) &((uint8_t*)(((struct priority_queue*)id_of_priority_queue)->priority_queue_data))[0];  
 
 
 }
@@ -211,15 +229,15 @@ void* priority_queue_top(void* id_of_priority_queue)
 
 /******************************************************************
 *
-* FUNCTION NAME: queue_pop
+* FUNCTION NAME: priority_queue_pop
 *
-* PURPOSE: Removes one position from the front of the queue
+* PURPOSE: Removes one position from the top of the priority queue
 *
 * ARGUMENTS:
 *
-* ARGUMENT 	TYPE	        I/O	DESCRIPTION
-* id_of_queue   void*	        I	pointer to the memory position of the queue to pop from
-*
+* ARGUMENT              TYPE	        I/O	DESCRIPTION
+* --------              ----            ---     ------------
+* id_of_priority_queue  void*	        I	pointer to the memory position of the queue to pop from
 *
 * RETURNS: void
 *
@@ -228,7 +246,61 @@ void* priority_queue_top(void* id_of_priority_queue)
 *****************************************************************/
 void priority_queue_pop(void* id_of_priority_queue)
 {
+        /* LOCAL VARIABLES:
+        *  Variable        Type    Description
+        *  --------        ----    -----------
+        *  None
+        */
+        if(NULL == id_of_priority_queue)
+        {
+                fprintf(stderr, "Priority queue pointer location is null\n");
+                return ;
+        }   
+        if(!check_queue_is_empty(id_of_priority_queue))
+        {
+                memcpy((void *)&((uint8_t*)(((struct priority_queue*)id_of_priority_queue)->priority_queue_data))[0],(void *)&((uint8_t*)(((struct priority_queue*)id_of_priority_queue)->priority_queue_data))[(check_priority_queue_size(id_of_priority_queue)-1)*((struct priority_queue*)id_of_priority_queue)->datatype_size], ((struct priority_queue*)id_of_priority_queue)->datatype_size);   
+                ((struct priority_queue*)id_of_priority_queue)->priority_queue_size--;
 
+                uint64_t left, right, smallest, index;
+                index = 0;
+                void *aux = NULL;
+                aux = malloc(1*((struct priority_queue*)id_of_priority_queue)->datatype_size);
+                while (1) 
+                {
+                        left = 2 * index + 1;
+                        right = 2 * index + 2;
+                        smallest = index;
+
+                        
+
+                        if(left < check_priority_queue_size(id_of_priority_queue) && (-1 == ((struct priority_queue*)id_of_priority_queue)->compare_func((void *) &((uint8_t*)(((struct priority_queue*)id_of_priority_queue)->priority_queue_data))[(left)*((struct priority_queue*)id_of_priority_queue)->datatype_size],(void *) &((uint8_t*)(((struct priority_queue*)id_of_priority_queue)->priority_queue_data))[(smallest)*((struct priority_queue*)id_of_priority_queue)->datatype_size])))
+                        {
+                                smallest = left;
+                        }
+
+                        if(right < check_priority_queue_size(id_of_priority_queue) && (-1 == ((struct priority_queue*)id_of_priority_queue)->compare_func((void *) &((uint8_t*)(((struct priority_queue*)id_of_priority_queue)->priority_queue_data))[(right)*((struct priority_queue*)id_of_priority_queue)->datatype_size],(void *) &((uint8_t*)(((struct priority_queue*)id_of_priority_queue)->priority_queue_data))[(smallest)*((struct priority_queue*)id_of_priority_queue)->datatype_size])))
+                        {
+                                smallest = right;
+                        }
+
+                        if (smallest != index) 
+                        {
+                                
+                                memcpy(aux, (void *) &((uint8_t*)(((struct priority_queue*)id_of_priority_queue)->priority_queue_data))[(index)*((struct priority_queue*)id_of_priority_queue)->datatype_size], ((struct priority_queue*)id_of_priority_queue)->datatype_size);     
+                                memcpy((void *) &((uint8_t*)(((struct priority_queue*)id_of_priority_queue)->priority_queue_data))[(index)*((struct priority_queue*)id_of_priority_queue)->datatype_size], (void *) &((uint8_t*)(((struct priority_queue*)id_of_priority_queue)->priority_queue_data))[(smallest)*((struct priority_queue*)id_of_priority_queue)->datatype_size], ((struct priority_queue*)id_of_priority_queue)->datatype_size);     
+                                memcpy((void *) &((uint8_t*)(((struct priority_queue*)id_of_priority_queue)->priority_queue_data))[(smallest)*((struct priority_queue*)id_of_priority_queue)->datatype_size],aux, ((struct priority_queue*)id_of_priority_queue)->datatype_size);
+                                index = smallest;
+                        }
+                        else 
+                        {
+                                break;
+                        }
+                }
+
+
+                free(aux);
+        }
+        return;
 
 
 
@@ -239,15 +311,16 @@ void priority_queue_pop(void* id_of_priority_queue)
 
 /******************************************************************
 *
-* FUNCTION NAME: queue_push
+* FUNCTION NAME: priority_queue_push        
 *
-* PURPOSE: Pushes an element to the back of the queue
+* PURPOSE: Pushes an element to the priority queue 
 *
 * ARGUMENTS:
 *
-* ARGUMENT 	TYPE	        I/O	DESCRIPTION
-* id_of_queue   void*	        I	pointer to the memory position of the queue to which the element is being push to
-* data_to_push  void*	        I	pointer to the memory position of the data to push into the queue
+* ARGUMENT 	        TYPE	        I/O	DESCRIPTION
+* --------              ----            ---     ------------
+* id_of_priority_queue  void*	        I	pointer to the memory position of the priority queue to which the element is being push to
+* data_to_push          void*	        I	pointer to the memory position of the data to push into the priority queue
 *
 *
 * RETURNS: void
@@ -264,14 +337,15 @@ void priority_queue_push(void* id_of_priority_queue, void* data_to_push)
 
 /******************************************************************
 *
-* FUNCTION NAME: check_queue_is_empty
+* FUNCTION NAME: check_priority_queue_is_empty
 *
-* PURPOSE: Checks if the queue is empty or not
+* PURPOSE: Checks if the priority queue is empty or not
 *
 * ARGUMENTS:
 *
-* ARGUMENT 	TYPE	        I/O	DESCRIPTION
-* id_of_queue   void*	        I	pointer to the memory position of the queue to check
+* ARGUMENT 	        TYPE	        I/O	DESCRIPTION
+* --------              ----            ---     ------------
+* id_of_priority_queue  void*	        I	pointer to the memory position of the priority queue to check
 *
 *
 * RETURNS: uint8_t
@@ -303,17 +377,17 @@ uint8_t check_priority_queue_is_empty(void* id_of_priority_queue)
 
 /******************************************************************
 *
-* FUNCTION NAME: check_queue_size
+* FUNCTION NAME: check_priority_queue_size
 *
 * PURPOSE: Will return the current element count in the queue
 *
 * ARGUMENTS:
 *
-* ARGUMENT 	TYPE	        I/O	DESCRIPTION
-* id_of_queue   void*	        I	pointer to the memory position of the queue to check
+* ARGUMENT 	        TYPE	        I/O	DESCRIPTION
+* --------              ----            ---     ------------
+* id_of_priority_queue  void*	        I	pointer to the memory position of the priority queue to check
 *
-*
-* RETURNS: uint64_t (size of the queue)
+* RETURNS: uint64_t
 *
 *
 *
@@ -339,14 +413,15 @@ uint64_t check_priority_queue_size(void* id_of_priority_queue)
 
 /******************************************************************
 *
-* FUNCTION NAME: free_queue
+* FUNCTION NAME: free_priority_queue
 *
-* PURPOSE: Frees the memory allocated for the queue
+* PURPOSE: Frees the memory allocated for the priority queue
 *
 * ARGUMENTS:
 *
-* ARGUMENT 	TYPE	        I/O	DESCRIPTION
-* id_of_queue   void*	        I	pointer to the memory position of the queue to free
+* ARGUMENT 	        TYPE	        I/O	DESCRIPTION
+* --------              ----            ---     ------------
+* id_of_priority_queue  void*	        I	pointer to the memory position of the priority queue to free
 *
 *
 * RETURNS: void
