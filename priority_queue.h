@@ -74,6 +74,7 @@ extern "C" {
 * --------                      ----            ---     ------------
 * id_of_priority_queue	        void**	        I/O	pointer to the memory position of the priority queue to implement
 * size_of_datatype              uint64_t        I       byte size of datatype to place in the priority queue
+* elements_to_allocate          uint64_t        I       number of elements to allocate for the priority queue
 * type_of_priority_queue        uint8_t         I       priority order of the priority queue
 *
 *
@@ -82,7 +83,7 @@ extern "C" {
 *
 *
 *****************************************************************/
-void create_priority_queue(void** id_of_priority_queue, uint64_t size_of_datatype, uint8_t type_of_priority_queue);   // uint64_t elements_to_allocate
+void create_priority_queue(void** id_of_priority_queue, uint64_t size_of_datatype, uint64_t elements_to_allocate, uint8_t type_of_priority_queue);   // uint64_t elements_to_allocate
 
 
 /******************************************************************
