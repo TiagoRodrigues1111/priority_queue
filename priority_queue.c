@@ -98,7 +98,7 @@
 struct priority_queue
 {
         uint64_t priority_queue_size;
-        uint64_t priority_queue_size_allocated;                  // num_of_elements
+        uint64_t priority_queue_size_allocated;         // num_of_elements
         uint64_t datatype_size;                         // num_of_bytes
         uint64_t k_aux;                                 // auxiliary 4 bytes for reallocation      
         void *priority_queue_data;
@@ -300,8 +300,6 @@ void priority_queue_pop(void* id_of_priority_queue)
 
                 free(aux);
         }
-        return;
-
 
 
         return;
@@ -355,11 +353,72 @@ void priority_queue_push(void* id_of_priority_queue, void* data_to_push)
 
 
 
+        ((struct priority_queue*)id_of_priority_queue)->priority_queue_size++;
+
+        // reallocate memory if num of elements in priority_queue becomes larger than the max num of elements allocated for the priority_queue 
+        if(((struct priority_queue*)id_of_priority_queue)->priority_queue_size > ((struct priority_queue*)id_of_priority_queue)->priority_queue_size_allocated)
+        {
+                void* priority_queue_aux = NULL;
+                // tries to allocate double the size of the current priority_queue;
+                if(1 == (((struct priority_queue*)id_of_priority_queue)->k_aux))
+                {
+                        priority_queue_aux = realloc(((struct priority_queue*)id_of_priority_queue)->priority_queue_data, (((struct priority_queue*)id_of_priority_queue)->priority_queue_size_allocated + ((struct priority_queue*)id_of_priority_queue)->priority_queue_size_allocated)*((struct priority_queue*)id_of_priority_queue)->datatype_size);                 
+                        if(NULL != priority_queue_aux)                   // this is not needed, and could be placed after the while, however the shift left is a bit faster than the addition
+                        {
+                                ((struct priority_queue*)id_of_priority_queue)->priority_queue_size_allocated <<= 1;                        
+                        }
+                }
+                else
+                {
+                        while (NULL == priority_queue_aux)
+                        {
+                                perror("Memory reallocation failed");
+                                printf("Attempting smaller reallocation\n");
+                                (((struct priority_queue*)id_of_priority_queue)->k_aux)<<=1;                              // always times 2 (TODO: might be faster to shift at the end again, and add 1 (check the lim->))
+                                 
+                                if(0 == (((struct priority_queue*)id_of_priority_queue)->priority_queue_size_allocated/(((struct priority_queue*)id_of_priority_queue)->k_aux)))
+                                {
+                                        fprintf(stderr, "Impossible to reallocate priority_queue\n");
+                                        //perror("Impossible to reallocate priority_queue");
+                                        return ;
+                                }
+                                priority_queue_aux = realloc(((struct priority_queue*)id_of_priority_queue)->priority_queue_data, (((struct priority_queue*)id_of_priority_queue)->priority_queue_size_allocated + (((struct priority_queue*)id_of_priority_queue)->priority_queue_size_allocated / (((struct priority_queue*)id_of_priority_queue)->k_aux)))*((struct priority_queue*)id_of_priority_queue)->datatype_size);
+                        }
+
+                        ((struct priority_queue*)id_of_priority_queue)->priority_queue_size_allocated += (((struct priority_queue*)id_of_priority_queue)->priority_queue_size_allocated/(((struct priority_queue*)id_of_priority_queue)->k_aux));          
+
+                }
+                
+                ((struct priority_queue*)id_of_priority_queue)->priority_queue_data = priority_queue_aux;
+        }
+
+        memcpy((void *) &((uint8_t*)(((struct priority_queue*)id_of_priority_queue)->priority_queue_data))[(((struct priority_queue*)id_of_priority_queue)->priority_queue_size-1)*((struct priority_queue*)id_of_priority_queue)->datatype_size], data_to_push, ((struct priority_queue*)id_of_priority_queue)->datatype_size);
 
 
+        uint64_t index = ((struct priority_queue*)id_of_priority_queue)->priority_queue_size - 1;
+        void *aux = NULL;
+        aux = malloc(1*((struct priority_queue*)id_of_priority_queue)->datatype_size);
 
+        while (index > 0) 
+        {
+                uint64_t parent = (index - 1) / 2;
+                
+                if((1 == ((struct priority_queue*)id_of_priority_queue)->compare_func((void *) &((uint8_t*)(((struct priority_queue*)id_of_priority_queue)->priority_queue_data))[(parent)*((struct priority_queue*)id_of_priority_queue)->datatype_size],(void *) &((uint8_t*)(((struct priority_queue*)id_of_priority_queue)->priority_queue_data))[(index)*((struct priority_queue*)id_of_priority_queue)->datatype_size])))
+                {
+                        
+                        memcpy(aux, (void *) &((uint8_t*)(((struct priority_queue*)id_of_priority_queue)->priority_queue_data))[(index)*((struct priority_queue*)id_of_priority_queue)->datatype_size], ((struct priority_queue*)id_of_priority_queue)->datatype_size);     
+                        memcpy((void *) &((uint8_t*)(((struct priority_queue*)id_of_priority_queue)->priority_queue_data))[(index)*((struct priority_queue*)id_of_priority_queue)->datatype_size], (void *) &((uint8_t*)(((struct priority_queue*)id_of_priority_queue)->priority_queue_data))[(parent)*((struct priority_queue*)id_of_priority_queue)->datatype_size], ((struct priority_queue*)id_of_priority_queue)->datatype_size);     
+                        memcpy((void *) &((uint8_t*)(((struct priority_queue*)id_of_priority_queue)->priority_queue_data))[(parent)*((struct priority_queue*)id_of_priority_queue)->datatype_size],aux, ((struct priority_queue*)id_of_priority_queue)->datatype_size);
+                       
+                        index = parent;
+                } 
+                else
+                {
+                        break;
+                }
+        }
 
-
+        free(aux);
 }
 
 
