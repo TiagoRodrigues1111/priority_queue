@@ -202,7 +202,7 @@ void create_priority_queue(void** id_of_priority_queue, uint64_t size_of_datatyp
 *
 *
 *****************************************************************/
-void* priority_queue_top(void* id_of_priority_queue)
+void* check_priority_queue_top(void* id_of_priority_queue)
 {
         /* LOCAL VARIABLES:
         *  Variable        Type    Description

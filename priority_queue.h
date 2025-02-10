@@ -146,7 +146,7 @@ void priority_queue_pop(void* id_of_priority_queue);
 *
 *
 *****************************************************************/
-void* priority_queue_top(void* id_of_priority_queue);
+void* check_priority_queue_top(void* id_of_priority_queue);
 
 
 /******************************************************************
