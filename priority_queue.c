@@ -102,6 +102,7 @@ struct priority_queue
         uint64_t datatype_size;                         // num_of_bytes
         uint64_t k_aux;                                 // auxiliary 4 bytes for reallocation      
         void *priority_queue_data;
+        int8_t type_of_priority_queue;
         int8_t (*compare_func)(void* val1, void* val2);
 };
 
@@ -170,6 +171,7 @@ void create_priority_queue(void** id_of_priority_queue, uint64_t size_of_datatyp
         ((struct priority_queue*)(*id_of_priority_queue))->datatype_size = size_of_datatype;
         ((struct priority_queue*)(*id_of_priority_queue))->k_aux = 1;
         ((struct priority_queue*)(*id_of_priority_queue))->compare_func = compare_func;
+        ((struct priority_queue*)(*id_of_priority_queue))->type_of_priority_queue = type_of_priority_queue;
 
         // Allocate space in the priority_queue for the array of values
         ((struct priority_queue*)(*id_of_priority_queue))->priority_queue_data = (void*) malloc(((struct priority_queue*)(*id_of_priority_queue))->priority_queue_size_allocated*((struct priority_queue*)(*id_of_priority_queue))->datatype_size);     
@@ -265,6 +267,16 @@ void priority_queue_pop(void* id_of_priority_queue)
                 index = 0;
                 void *aux = NULL;
                 aux = malloc(1*((struct priority_queue*)id_of_priority_queue)->datatype_size);
+
+                int8_t cmp_aux = 0;
+                if(0 == ((struct priority_queue*)id_of_priority_queue)->type_of_priority_queue)
+                        cmp_aux = -1;
+                else
+                {
+                        cmp_aux = 1;
+                }
+
+
                 while (1) 
                 {
                         left = 2 * index + 1;
@@ -273,12 +285,12 @@ void priority_queue_pop(void* id_of_priority_queue)
 
                         
 
-                        if(left < check_priority_queue_size(id_of_priority_queue) && (-1 == ((struct priority_queue*)id_of_priority_queue)->compare_func((void *) &((uint8_t*)(((struct priority_queue*)id_of_priority_queue)->priority_queue_data))[(left)*((struct priority_queue*)id_of_priority_queue)->datatype_size],(void *) &((uint8_t*)(((struct priority_queue*)id_of_priority_queue)->priority_queue_data))[(smallest)*((struct priority_queue*)id_of_priority_queue)->datatype_size])))
+                        if(left < check_priority_queue_size(id_of_priority_queue) && (cmp_aux == ((struct priority_queue*)id_of_priority_queue)->compare_func((void *) &((uint8_t*)(((struct priority_queue*)id_of_priority_queue)->priority_queue_data))[(left)*((struct priority_queue*)id_of_priority_queue)->datatype_size],(void *) &((uint8_t*)(((struct priority_queue*)id_of_priority_queue)->priority_queue_data))[(smallest)*((struct priority_queue*)id_of_priority_queue)->datatype_size])))
                         {
                                 smallest = left;
                         }
 
-                        if(right < check_priority_queue_size(id_of_priority_queue) && (-1 == ((struct priority_queue*)id_of_priority_queue)->compare_func((void *) &((uint8_t*)(((struct priority_queue*)id_of_priority_queue)->priority_queue_data))[(right)*((struct priority_queue*)id_of_priority_queue)->datatype_size],(void *) &((uint8_t*)(((struct priority_queue*)id_of_priority_queue)->priority_queue_data))[(smallest)*((struct priority_queue*)id_of_priority_queue)->datatype_size])))
+                        if(right < check_priority_queue_size(id_of_priority_queue) && (cmp_aux == ((struct priority_queue*)id_of_priority_queue)->compare_func((void *) &((uint8_t*)(((struct priority_queue*)id_of_priority_queue)->priority_queue_data))[(right)*((struct priority_queue*)id_of_priority_queue)->datatype_size],(void *) &((uint8_t*)(((struct priority_queue*)id_of_priority_queue)->priority_queue_data))[(smallest)*((struct priority_queue*)id_of_priority_queue)->datatype_size])))
                         {
                                 smallest = right;
                         }
@@ -398,12 +410,21 @@ void priority_queue_push(void* id_of_priority_queue, void* data_to_push)
         uint64_t index = ((struct priority_queue*)id_of_priority_queue)->priority_queue_size - 1;
         void *aux = NULL;
         aux = malloc(1*((struct priority_queue*)id_of_priority_queue)->datatype_size);
+        
+        
+        int8_t cmp_aux = 0;
+        if(0 == ((struct priority_queue*)id_of_priority_queue)->type_of_priority_queue)
+                cmp_aux = 1;
+        else
+        {
+                cmp_aux = -1;
+        }
 
         while (index > 0) 
         {
                 uint64_t parent = (index - 1) / 2;
                 
-                if((1 == ((struct priority_queue*)id_of_priority_queue)->compare_func((void *) &((uint8_t*)(((struct priority_queue*)id_of_priority_queue)->priority_queue_data))[(parent)*((struct priority_queue*)id_of_priority_queue)->datatype_size],(void *) &((uint8_t*)(((struct priority_queue*)id_of_priority_queue)->priority_queue_data))[(index)*((struct priority_queue*)id_of_priority_queue)->datatype_size])))
+                if((cmp_aux == ((struct priority_queue*)id_of_priority_queue)->compare_func((void *) &((uint8_t*)(((struct priority_queue*)id_of_priority_queue)->priority_queue_data))[(parent)*((struct priority_queue*)id_of_priority_queue)->datatype_size],(void *) &((uint8_t*)(((struct priority_queue*)id_of_priority_queue)->priority_queue_data))[(index)*((struct priority_queue*)id_of_priority_queue)->datatype_size])))
                 {
                         
                         memcpy(aux, (void *) &((uint8_t*)(((struct priority_queue*)id_of_priority_queue)->priority_queue_data))[(index)*((struct priority_queue*)id_of_priority_queue)->datatype_size], ((struct priority_queue*)id_of_priority_queue)->datatype_size);     
