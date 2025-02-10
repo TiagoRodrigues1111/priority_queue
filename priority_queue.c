@@ -331,6 +331,35 @@ void priority_queue_pop(void* id_of_priority_queue)
 void priority_queue_push(void* id_of_priority_queue, void* data_to_push)
 {
 
+       /* LOCAL VARIABLES:
+        *  Variable     Type    Description
+        *  --------     ----    -----------
+        *  queue_aux    void*   auxiliary pointer for the realloc operation
+        */
+        if(NULL == id_of_priority_queue)
+        {
+                fprintf(stderr, "Priority queue pointer location is null\n");
+                return ;
+        }
+        if(UINT64_MAX == ((struct priority_queue*)id_of_priority_queue)->priority_queue_size)
+        {
+                fprintf(stderr, "Priority queue full, can't add more elements\n");
+                return ;
+        }
+        if(NULL == data_to_push)
+        {
+                fprintf(stderr, "Data pointer is null\n");
+                return ;
+        }
+
+
+
+
+
+
+
+
+
 }
 
 
