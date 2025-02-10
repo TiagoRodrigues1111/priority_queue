@@ -216,7 +216,7 @@ void* priority_queue_top(void* id_of_priority_queue)
         }
                
 
-        if(check_queue_is_empty(id_of_priority_queue))                       
+        if(check_priority_queue_is_empty(id_of_priority_queue))                       
                 return NULL;
 
         return (void *) &((uint8_t*)(((struct priority_queue*)id_of_priority_queue)->priority_queue_data))[0];  
@@ -256,7 +256,7 @@ void priority_queue_pop(void* id_of_priority_queue)
                 fprintf(stderr, "Priority queue pointer location is null\n");
                 return ;
         }   
-        if(!check_queue_is_empty(id_of_priority_queue))
+        if(!check_priority_queue_is_empty(id_of_priority_queue))
         {
                 memcpy((void *)&((uint8_t*)(((struct priority_queue*)id_of_priority_queue)->priority_queue_data))[0],(void *)&((uint8_t*)(((struct priority_queue*)id_of_priority_queue)->priority_queue_data))[(check_priority_queue_size(id_of_priority_queue)-1)*((struct priority_queue*)id_of_priority_queue)->datatype_size], ((struct priority_queue*)id_of_priority_queue)->datatype_size);   
                 ((struct priority_queue*)id_of_priority_queue)->priority_queue_size--;
